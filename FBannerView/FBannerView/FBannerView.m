@@ -14,7 +14,7 @@
 @end
 @implementation FBannerView{
     
-    NSInteger currentIndex;
+    int currentIndex;
     UICollectionView *collectionView;
     NSTimer *timer;
     void (^clickItem)(NSInteger index);
@@ -98,7 +98,7 @@
         collectionView.contentOffset = CGPointMake(kScreenWWidth, 0);
     }
     
-    currentIndex = collectionView.contentOffset.x/kScreenWWidth;
+    currentIndex = (int) collectionView.contentOffset.x/kScreenWWidth;
     NSLog(@"第几张 %zd",currentIndex);
     pageControl.currentPage = currentIndex-1;
 }
