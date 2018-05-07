@@ -14,7 +14,7 @@
 @end
 @implementation FBannerView{
     
-    int currentIndex;
+    long currentIndex;
     UICollectionView *collectionView;
     NSTimer *timer;
     void (^clickItem)(NSInteger index);
