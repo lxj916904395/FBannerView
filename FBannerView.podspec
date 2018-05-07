@@ -7,7 +7,7 @@ Pod::Spec.new do |s|
   s.license= "MIT"
   s.author       = { "lxj916904395" => "916904395@qq.com" }
   s.source       = { :git => "https://github.com/lxj916904395/FBannerView.git", :tag => s.version.to_s }
-  s.source_files = "/*"
+  s.source_files = "FBannerView/*"
   s.ios.deployment_target = '6.0'
   s.frameworks   = 'UIKit'
   s.requires_arc = true
