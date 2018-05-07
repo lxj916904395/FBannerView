@@ -8,8 +8,6 @@
 
 #import "FBannerView.h"
 
-#import "NSArray+runSend.h"
-
 @interface FBannerView()<UICollectionViewDataSource,UICollectionViewDelegate>
 @end
 @implementation FBannerView{
