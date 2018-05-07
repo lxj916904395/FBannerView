@@ -8,6 +8,8 @@
 
 #import "FBannerView.h"
 
+#define kScreenWWidth  [[UIScreen mainScreen] bounds].size.width
+
 @interface FBannerView()<UICollectionViewDataSource,UICollectionViewDelegate>
 @end
 @implementation FBannerView{
@@ -26,7 +28,6 @@
         currentIndex = 0;
         clickItem = block;
         _time = time;
-        
         count = images.count;
         _images = [NSMutableArray arrayWithArray:images];
         
@@ -42,11 +43,11 @@
 
 - (void)_createUI{
     UICollectionViewFlowLayout *layout = [[UICollectionViewFlowLayout alloc] init];
-    layout.itemSize = CGSizeMake(kScreenWWidth, self.height);
+    layout.itemSize = CGSizeMake(kScreenWWidth, self.frame.size.height);
     layout.minimumInteritemSpacing = 0;
     layout.minimumLineSpacing = 0;
     layout.scrollDirection = UICollectionViewScrollDirectionHorizontal;
-    collectionView = [[UICollectionView alloc] initWithFrame:CGRectMake(0,0, kScreenWWidth, self.height) collectionViewLayout:layout];
+    collectionView = [[UICollectionView alloc] initWithFrame:CGRectMake(0,0, kScreenWWidth, self.frame.size.height) collectionViewLayout:layout];
     collectionView.bounces = NO;
     collectionView.delegate = self;
     collectionView.dataSource = self;
@@ -62,12 +63,11 @@
 }
 
 - (void)_createPageControl{
-    pageControl = [[UIPageControl alloc] initWithFrame:CGRectMake(0, self.height-30, 100, 20)];
+    pageControl = [[UIPageControl alloc] initWithFrame:CGRectMake((self.frame.size.width-100)/2, self.frame.size.height-30, 100, 20)];
     pageControl.pageIndicatorTintColor = [UIColor grayColor];
     pageControl.currentPageIndicatorTintColor = [UIColor orangeColor];
     pageControl.numberOfPages = count;
     pageControl.currentPage = 0;
-    pageControl.centerX = self.centerX;
     [self addSubview:pageControl];
 }
 
