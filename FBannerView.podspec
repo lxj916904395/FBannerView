@@ -11,7 +11,7 @@ Pod::Spec.new do |s|
   s.ios.deployment_target = '6.0'
   s.frameworks   = 'UIKit'
   s.requires_arc = true
-  s.dependencies = 'SDWebImage' #依赖的项目内容 可以多个
+  s.dependencies = "SDWebImage" #依赖的项目内容 可以多个
   s.public_header_files = 'FBannerView/FBannerView/FBannerView.h' #需要对外开放的头文件
 
 
