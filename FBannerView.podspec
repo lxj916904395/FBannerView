@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name         = "FBannerView"
-  s.version      = "1.0.0"
+  s.version      = "0.0.1"
   s.summary      = "A view for AD show"
   s.description  = "A view for AD show addtion with cocoapod support."
   s.homepage     = "https://github.com/lxj916904395/FBannerView"
@@ -11,5 +11,7 @@ Pod::Spec.new do |s|
   s.ios.deployment_target = '6.0'
   s.frameworks   = 'UIKit'
   s.requires_arc = true
+  s.dependency "SDWebImage"
+
 
 end

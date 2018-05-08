@@ -8,7 +8,8 @@
 
 #import "FBannerView.h"
 
-#define kScreenWWidth  [[UIScreen mainScreen] bounds].size.width
+#define viewWidth self.frame.size.width
+#define viewHeight self.frame.size.height
 
 @interface FBannerView()<UICollectionViewDataSource,UICollectionViewDelegate>
 @end
@@ -21,13 +22,16 @@
     NSInteger count;
     UIPageControl *pageControl;
     NSInteger _time;
+    UIImage *placeholderImage;
 }
 
-- (instancetype)initWithFrame:(CGRect)frame images:(NSArray *)images time:(NSInteger)time click:(void(^)(NSInteger index))block{
+- (instancetype)initWithFrame:(CGRect)frame images:(NSArray *)images duration:(NSTimeInterval)duration placeholderImage:(UIImage *)placeholderImg click:(void(^)(NSInteger index))block{
     if (self = [super initWithFrame:frame]) {
         currentIndex = 0;
         clickItem = block;
-        _time = time;
+        _time = duration;
+        placeholderImage = placeholderImg;
+        
         count = images.count;
         _images = [NSMutableArray arrayWithArray:images];
         
@@ -43,11 +47,11 @@
 
 - (void)_createUI{
     UICollectionViewFlowLayout *layout = [[UICollectionViewFlowLayout alloc] init];
-    layout.itemSize = CGSizeMake(kScreenWWidth, self.frame.size.height);
+    layout.itemSize = CGSizeMake(viewWidth, viewHeight);
     layout.minimumInteritemSpacing = 0;
     layout.minimumLineSpacing = 0;
     layout.scrollDirection = UICollectionViewScrollDirectionHorizontal;
-    collectionView = [[UICollectionView alloc] initWithFrame:CGRectMake(0,0, kScreenWWidth, self.frame.size.height) collectionViewLayout:layout];
+    collectionView = [[UICollectionView alloc] initWithFrame:CGRectMake(0,0, viewWidth, viewHeight) collectionViewLayout:layout];
     collectionView.bounces = NO;
     collectionView.delegate = self;
     collectionView.dataSource = self;
@@ -58,12 +62,12 @@
     
     if (_images.count <= 1) return;
     [self _createPageControl];
-    collectionView.contentOffset = CGPointMake(kScreenWWidth, 0);
+    collectionView.contentOffset = CGPointMake(viewWidth, 0);
     [self _startTimer];
 }
 
 - (void)_createPageControl{
-    pageControl = [[UIPageControl alloc] initWithFrame:CGRectMake((self.frame.size.width-100)/2, self.frame.size.height-30, 100, 20)];
+    pageControl = [[UIPageControl alloc] initWithFrame:CGRectMake((viewWidth-100)/2, viewHeight-30, 100, 20)];
     pageControl.pageIndicatorTintColor = [UIColor grayColor];
     pageControl.currentPageIndicatorTintColor = [UIColor orangeColor];
     pageControl.numberOfPages = count;
@@ -71,6 +75,10 @@
     [self addSubview:pageControl];
 }
 
+
+/**
+ 停止定时器
+ */
 - (void)_stopTimer{
     if (timer) {
         [timer invalidate];
@@ -78,28 +86,30 @@
     timer = nil;
 }
 
+//开始定时器
 - (void)_startTimer{
     [self _stopTimer];
     timer = [NSTimer scheduledTimerWithTimeInterval:_time target:self selector:@selector(nextPage) userInfo:nil repeats:YES] ;
     [[NSRunLoop currentRunLoop] addTimer:timer forMode:NSRunLoopCommonModes];
 }
 
+//下一页
 - (void)nextPage{
     CGPoint offset = collectionView.contentOffset;
-    offset.x += kScreenWWidth;
+    offset.x += viewWidth;
     [collectionView setContentOffset:offset animated:YES];
 }
 
+// 重置偏移量
 - (void)resetOffset{
-    NSInteger page = collectionView.contentOffset.x/kScreenWWidth;
+    NSInteger page = collectionView.contentOffset.x/viewWidth;
     if (page == 0) {//滚动到左边
-        collectionView.contentOffset = CGPointMake(kScreenWWidth * (_images.count - 2), 0);
+        collectionView.contentOffset = CGPointMake(viewWidth * (_images.count - 2), 0);
     }else if (page == _images.count - 1){//滚动到右边
-        collectionView.contentOffset = CGPointMake(kScreenWWidth, 0);
+        collectionView.contentOffset = CGPointMake(viewWidth, 0);
     }
     
-    currentIndex = (int) collectionView.contentOffset.x/kScreenWWidth;
-    NSLog(@"第几张 %zd",currentIndex);
+    currentIndex = collectionView.contentOffset.x/viewWidth;
     pageControl.currentPage = currentIndex-1;
 }
 
@@ -110,7 +120,8 @@
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath{
     
     ImageCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"cell" forIndexPath:indexPath];
-    cell.image = [UIImage imageNamed:_images[indexPath.row]];
+    cell.placeholderImage = placeholderImage;
+    cell.url = _images[indexPath.row];
     return cell;
 }
 
@@ -166,8 +177,21 @@
     return self;
 }
 
-- (void)setImage:(UIImage *)image{
-    self.imageView.image = image;
-}
+- (void)setUrl:(NSString *)url{
+    
+    NSString *userAgent = @"";
+    userAgent = [NSString stringWithFormat:@"%@/%@ (%@; iOS %@; Scale/%0.2f)", [[[NSBundle mainBundle] infoDictionary] objectForKey:(__bridge NSString *)kCFBundleExecutableKey] ?: [[[NSBundle mainBundle] infoDictionary] objectForKey:(__bridge NSString *)kCFBundleIdentifierKey], [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleShortVersionString"] ?: [[[NSBundle mainBundle] infoDictionary] objectForKey:(__bridge NSString *)kCFBundleVersionKey], [[UIDevice currentDevice] model], [[UIDevice currentDevice] systemVersion], [[UIScreen mainScreen] scale]];
+    
+    if (userAgent) {
+        if (![userAgent canBeConvertedToEncoding:NSASCIIStringEncoding]) {
+            NSMutableString *mutableUserAgent = [userAgent mutableCopy];
+            if (CFStringTransform((__bridge CFMutableStringRef)(mutableUserAgent), NULL, (__bridge CFStringRef)@"Any-Latin; Latin-ASCII; [:^ASCII:] Remove", false)) {
+                userAgent = mutableUserAgent;
+            }
+        }
+        [[SDWebImageDownloader sharedDownloader] setValue:userAgent forHTTPHeaderField:@"User-Agent"];
+    }
 
+    [self.imageView sd_setImageWithURL:[NSURL URLWithString:url] placeholderImage:self.placeholderImage];
+}
 @end
