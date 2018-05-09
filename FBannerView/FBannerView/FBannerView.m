@@ -8,6 +8,9 @@
 
 #import "FBannerView.h"
 
+#import "UIImageView+WebCache.h"
+#import <SDWebImage/SDWebImageDownloader.h>
+
 #define viewWidth self.frame.size.width
 #define viewHeight self.frame.size.height
 
