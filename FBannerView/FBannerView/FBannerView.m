@@ -60,7 +60,7 @@
     collectionView.dataSource = self;
     [collectionView registerClass:[ImageCell class] forCellWithReuseIdentifier:@"cell"];
     collectionView.pagingEnabled = YES;
-    
+    collectionView.showsHorizontalScrollIndicator = NO;
     [self addSubview:collectionView];
     
     if (_images.count <= 1) return;
