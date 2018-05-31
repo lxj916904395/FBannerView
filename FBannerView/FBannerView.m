@@ -37,8 +37,8 @@
         _images = [NSMutableArray arrayWithArray:self.config.imageUrls];
         
         if (_images.count >1) {
-            [_images addObject:_images[0]];
-            [_images insertObject:[_images lastObject] atIndex:0];
+            [_images addObject:config.imageUrls[0]];
+            [_images insertObject:[config.imageUrls lastObject] atIndex:0];
         }
         [self _createUI];
 
