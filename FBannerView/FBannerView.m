@@ -15,27 +15,27 @@
 #define viewHeight self.frame.size.height
 
 @interface FBannerView()<UICollectionViewDataSource,UICollectionViewDelegate>
+@property(strong ,nonatomic) FBannerConfig * config;
+
 @end
 @implementation FBannerView{
     
     long currentIndex;
     UICollectionView *collectionView;
     NSTimer *timer;
-    void (^clickItem)(NSInteger index);
-    NSInteger count;
+    NSInteger _count;
     UIPageControl *pageControl;
     NSInteger _time;
-    UIImage *placeholderImage;
+    UIImage *_placeholderImage;
 }
 
-- (instancetype)initWithFrame:(CGRect)frame images:(NSArray *)images duration:(NSTimeInterval)duration placeholderImage:(UIImage *)placeholderImg click:(void(^)(NSInteger index))block{
+- (instancetype)initWithFrame:(CGRect)frame images:(NSArray *)images duration:(NSTimeInterval)duration placeholderImage:(UIImage *)placeholderImg config:(FBannerConfig *)config{
     if (self = [super initWithFrame:frame]) {
         currentIndex = 0;
-        clickItem = block;
         _time = duration;
-        placeholderImage = placeholderImg;
+        _placeholderImage = placeholderImg;
         
-        count = images.count;
+        _count = images.count;
         _images = [NSMutableArray arrayWithArray:images];
         
         if (images.count >1) {
@@ -71,9 +71,9 @@
 
 - (void)_createPageControl{
     pageControl = [[UIPageControl alloc] initWithFrame:CGRectMake((viewWidth-100)/2, viewHeight-30, 100, 20)];
-    pageControl.pageIndicatorTintColor = [UIColor grayColor];
-    pageControl.currentPageIndicatorTintColor = [UIColor orangeColor];
-    pageControl.numberOfPages = count;
+    pageControl.pageIndicatorTintColor = _config.pageIndicatorTintColor?_config.pageIndicatorTintColor:[UIColor grayColor];
+    pageControl.currentPageIndicatorTintColor = _config.currentPageIndicatorTintColor?_config.currentPageIndicatorTintColor:[UIColor orangeColor];
+    pageControl.numberOfPages = _count;
     pageControl.currentPage = 0;
     [self addSubview:pageControl];
 }
@@ -123,26 +123,29 @@
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath{
     
     ImageCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"cell" forIndexPath:indexPath];
-    cell.placeholderImage = placeholderImage;
+    cell.placeholderImage = _placeholderImage;
     cell.url = _images[indexPath.row];
     return cell;
 }
 
 - (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath{
     
-    if (clickItem) {
+    if (_delegate && [_delegate respondsToSelector:@selector(bannerView:didSelectIndex:)]) {
         
         NSInteger row = indexPath.row;
+        NSInteger currentIndex = 0;
     
         //第一张
         if (row == 1 || row == _images.count-1) {
-            clickItem(1);
+            currentIndex = 1;
         }else if(row == 0 || row == _images.count-2){
             //最后一张
-            clickItem(count);
+            currentIndex = _count;
         }else{
-            clickItem(row);
+            currentIndex = row;
         }
+        
+        [_delegate bannerView:self didSelectIndex:currentIndex];
     }
 }
 
