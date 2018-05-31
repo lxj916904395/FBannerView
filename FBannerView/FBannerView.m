@@ -16,31 +16,29 @@
 
 @interface FBannerView()<UICollectionViewDataSource,UICollectionViewDelegate>
 @property(strong ,nonatomic) FBannerConfig * config;
+@property(strong ,nonatomic) NSMutableArray * images;
 
 @end
 @implementation FBannerView{
     
-    long currentIndex;
+    long _currentPage;
     UICollectionView *collectionView;
     NSTimer *timer;
-    NSInteger _count;
+    NSInteger _imageCount;
     UIPageControl *pageControl;
-    NSInteger _time;
-    UIImage *_placeholderImage;
 }
 
-- (instancetype)initWithFrame:(CGRect)frame images:(NSArray *)images duration:(NSTimeInterval)duration placeholderImage:(UIImage *)placeholderImg config:(FBannerConfig *)config{
+- (instancetype)initWithFrame:(CGRect)frame config:(FBannerConfig *)config{
     if (self = [super initWithFrame:frame]) {
-        currentIndex = 0;
-        _time = duration;
-        _placeholderImage = placeholderImg;
+        self.config = config;
         
-        _count = images.count;
-        _images = [NSMutableArray arrayWithArray:images];
+        _currentPage = 0;
+        _imageCount = self.config.imageUrls.count;
+        _images = [NSMutableArray arrayWithArray:self.config.imageUrls];
         
-        if (images.count >1) {
-            [_images addObject:images[0]];
-            [_images insertObject:[images lastObject] atIndex:0];
+        if (_images.count >1) {
+            [_images addObject:_images[0]];
+            [_images insertObject:[_images lastObject] atIndex:0];
         }
         [self _createUI];
 
@@ -73,7 +71,7 @@
     pageControl = [[UIPageControl alloc] initWithFrame:CGRectMake((viewWidth-100)/2, viewHeight-30, 100, 20)];
     pageControl.pageIndicatorTintColor = _config.pageIndicatorTintColor?_config.pageIndicatorTintColor:[UIColor grayColor];
     pageControl.currentPageIndicatorTintColor = _config.currentPageIndicatorTintColor?_config.currentPageIndicatorTintColor:[UIColor orangeColor];
-    pageControl.numberOfPages = _count;
+    pageControl.numberOfPages = _imageCount;
     pageControl.currentPage = 0;
     [self addSubview:pageControl];
 }
@@ -92,7 +90,7 @@
 //开始定时器
 - (void)_startTimer{
     [self _stopTimer];
-    timer = [NSTimer scheduledTimerWithTimeInterval:_time target:self selector:@selector(nextPage) userInfo:nil repeats:YES] ;
+    timer = [NSTimer scheduledTimerWithTimeInterval:self.config.duration>0?self.config.duration:2.f target:self selector:@selector(nextPage) userInfo:nil repeats:YES] ;
     [[NSRunLoop currentRunLoop] addTimer:timer forMode:NSRunLoopCommonModes];
 }
 
@@ -112,8 +110,8 @@
         collectionView.contentOffset = CGPointMake(viewWidth, 0);
     }
     
-    currentIndex = collectionView.contentOffset.x/viewWidth;
-    pageControl.currentPage = currentIndex-1;
+    _currentPage = collectionView.contentOffset.x/viewWidth;
+    pageControl.currentPage = _currentPage-1;
 }
 
 - (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section{
@@ -123,7 +121,7 @@
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath{
     
     ImageCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"cell" forIndexPath:indexPath];
-    cell.placeholderImage = _placeholderImage;
+    cell.placeholderImage = self.config.placeholderImg;
     cell.url = _images[indexPath.row];
     return cell;
 }
@@ -133,19 +131,19 @@
     if (_delegate && [_delegate respondsToSelector:@selector(bannerView:didSelectIndex:)]) {
         
         NSInteger row = indexPath.row;
-        NSInteger currentIndex = 0;
+        NSInteger current = 0;
     
         //第一张
         if (row == 1 || row == _images.count-1) {
-            currentIndex = 1;
+            current = 1;
         }else if(row == 0 || row == _images.count-2){
             //最后一张
-            currentIndex = _count;
+            current = _imageCount;
         }else{
-            currentIndex = row;
+            current = row;
         }
         
-        [_delegate bannerView:self didSelectIndex:currentIndex];
+        [_delegate bannerView:self didSelectIndex:current];
     }
 }
 
@@ -200,4 +198,7 @@
 
     [self.imageView sd_setImageWithURL:[NSURL URLWithString:url] placeholderImage:self.placeholderImage];
 }
+@end
+
+@implementation FBannerConfig
 @end
