@@ -95,6 +95,10 @@
 
 - (void)setImageUrls:(NSArray *)imageUrls{
     _imageUrls = imageUrls;
+    if (!self.config) {
+        self.config = [FBannerConfig new];
+    }
+    self.config.imageUrls = _imageUrls;
     [self _stopTimer];
     [self _createUI];
 }
