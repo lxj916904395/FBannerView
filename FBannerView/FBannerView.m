@@ -17,15 +17,16 @@
 @interface FBannerView()<UICollectionViewDataSource,UICollectionViewDelegate>
 @property(strong ,nonatomic) FBannerConfig * config;
 @property(strong ,nonatomic) NSMutableArray * images;
-
+@property(strong ,nonatomic) UICollectionView *collectionView;
+@property(strong ,nonatomic) UIPageControl *pageControl;
 @end
 @implementation FBannerView{
     
     long _currentPage;
-    UICollectionView *collectionView;
+    
     NSTimer *timer;
     NSInteger _imageCount;
-    UIPageControl *pageControl;
+
 }
 
 - (instancetype)initWithFrame:(CGRect)frame config:(FBannerConfig *)config{
@@ -33,49 +34,72 @@
         self.config = config;
         
         _currentPage = 0;
-        _imageCount = self.config.imageUrls.count;
-        _images = [NSMutableArray arrayWithArray:self.config.imageUrls];
-        
-        if (_images.count >1) {
-            [_images addObject:config.imageUrls[0]];
-            [_images insertObject:[config.imageUrls lastObject] atIndex:0];
-        }
+    
         [self _createUI];
 
     }
     return self;
 }
 
+- (UICollectionView *)collectionView{
+    if(!_collectionView){
+        UICollectionViewFlowLayout *layout = [[UICollectionViewFlowLayout alloc] init];
+        layout.itemSize = CGSizeMake(viewWidth, viewHeight);
+        layout.minimumInteritemSpacing = 0;
+        layout.minimumLineSpacing = 0;
+        layout.scrollDirection = UICollectionViewScrollDirectionHorizontal;
+        _collectionView = [[UICollectionView alloc] initWithFrame:CGRectMake(0,0, viewWidth, viewHeight) collectionViewLayout:layout];
+        _collectionView.bounces = NO;
+        _collectionView.delegate = self;
+        _collectionView.dataSource = self;
+        [_collectionView registerClass:[ImageCell class] forCellWithReuseIdentifier:@"cell"];
+        _collectionView.pagingEnabled = YES;
+        _collectionView.showsHorizontalScrollIndicator = NO;
+    }
+    return _collectionView;
+}
+
 - (void)_createUI{
-    UICollectionViewFlowLayout *layout = [[UICollectionViewFlowLayout alloc] init];
-    layout.itemSize = CGSizeMake(viewWidth, viewHeight);
-    layout.minimumInteritemSpacing = 0;
-    layout.minimumLineSpacing = 0;
-    layout.scrollDirection = UICollectionViewScrollDirectionHorizontal;
-    collectionView = [[UICollectionView alloc] initWithFrame:CGRectMake(0,0, viewWidth, viewHeight) collectionViewLayout:layout];
-    collectionView.bounces = NO;
-    collectionView.delegate = self;
-    collectionView.dataSource = self;
-    [collectionView registerClass:[ImageCell class] forCellWithReuseIdentifier:@"cell"];
-    collectionView.pagingEnabled = YES;
-    collectionView.showsHorizontalScrollIndicator = NO;
-    [self addSubview:collectionView];
     
+    _imageCount = _config.imageUrls.count;
+    _images = [NSMutableArray arrayWithArray:_config.imageUrls];
+    
+    if (_images.count >1) {
+        [_images addObject:_config.imageUrls[0]];
+        [_images insertObject:[_config.imageUrls lastObject] atIndex:0];
+    }
+    
+    if (!self.collectionView.superview) {
+        [self addSubview:self.collectionView];
+    }
+
     if (_images.count <= 1) return;
-    [self _createPageControl];
-    collectionView.contentOffset = CGPointMake(viewWidth, 0);
+    if (!self.pageControl.superview) {
+        [self addSubview:self.pageControl];
+    }
+    _pageControl.numberOfPages = _imageCount;
+    _pageControl.currentPage = 0;
+
+    _collectionView.contentOffset = CGPointMake(viewWidth, 0);
     [self _startTimer];
 }
 
-- (void)_createPageControl{
-    pageControl = [[UIPageControl alloc] initWithFrame:CGRectMake((viewWidth-100)/2, viewHeight-30, 100, 20)];
-    pageControl.pageIndicatorTintColor = _config.pageIndicatorTintColor?_config.pageIndicatorTintColor:[UIColor grayColor];
-    pageControl.currentPageIndicatorTintColor = _config.currentPageIndicatorTintColor?_config.currentPageIndicatorTintColor:[UIColor orangeColor];
-    pageControl.numberOfPages = _imageCount;
-    pageControl.currentPage = 0;
-    [self addSubview:pageControl];
+- (UIPageControl *)pageControl{
+    if (!_pageControl) {
+        _pageControl = [[UIPageControl alloc] initWithFrame:CGRectMake((viewWidth-100)/2, viewHeight-30, 100, 20)];
+        _pageControl.pageIndicatorTintColor = _config.pageIndicatorTintColor?_config.pageIndicatorTintColor:[UIColor grayColor];
+        _pageControl.currentPageIndicatorTintColor = _config.currentPageIndicatorTintColor?_config.currentPageIndicatorTintColor:[UIColor orangeColor];
+    }
+    return _pageControl;
 }
 
+- (void)setImageUrls:(NSArray *)imageUrls{
+    _imageUrls = imageUrls;
+    [self _stopTimer];
+    [self _createUI];
+}
+
+#pragma mark - 定时器
 
 /**
  停止定时器
@@ -94,26 +118,29 @@
     [[NSRunLoop currentRunLoop] addTimer:timer forMode:NSRunLoopCommonModes];
 }
 
+#pragma mark - 图片切换
 //下一页
 - (void)nextPage{
-    CGPoint offset = collectionView.contentOffset;
+    CGPoint offset = _collectionView.contentOffset;
     offset.x += viewWidth;
-    [collectionView setContentOffset:offset animated:YES];
+    [_collectionView setContentOffset:offset animated:YES];
 }
 
 // 重置偏移量
 - (void)resetOffset{
-    NSInteger page = collectionView.contentOffset.x/viewWidth;
+    NSInteger page = _collectionView.contentOffset.x/viewWidth;
     if (page == 0) {//滚动到左边
-        collectionView.contentOffset = CGPointMake(viewWidth * (_images.count - 2), 0);
+        _collectionView.contentOffset = CGPointMake(viewWidth * (_images.count - 2), 0);
     }else if (page == _images.count - 1){//滚动到右边
-        collectionView.contentOffset = CGPointMake(viewWidth, 0);
+        _collectionView.contentOffset = CGPointMake(viewWidth, 0);
     }
     
-    _currentPage = collectionView.contentOffset.x/viewWidth;
-    pageControl.currentPage = _currentPage-1;
+    _currentPage = _collectionView.contentOffset.x/viewWidth;
+    _pageControl.currentPage = _currentPage-1;
 }
 
+
+#pragma mark - UICollectionViewDelegate
 - (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section{
     return _images.count;
 }

@@ -24,6 +24,7 @@
 
 - (instancetype)initWithFrame:(CGRect)frame config:(FBannerConfig *)config;
 @property(weak ,nonatomic) id<FBannerViewDelegate> delegate;
+@property(strong ,nonatomic) NSArray * imageUrls;//图片链接
 
 @end
 
