@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name         = "FBannerView"
-  s.version      = "0.0.6"
+  s.version      = "0.0.7"
   s.summary      = "A view for AD show"
   s.description  = "A view for AD show addtion with cocoapod support."
   s.homepage     = "https://github.com/lxj916904395/FBannerView"
