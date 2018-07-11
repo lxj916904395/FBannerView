@@ -150,11 +150,13 @@
 }
 
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath{
-    
-    ImageCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"cell" forIndexPath:indexPath];
-    cell.placeholderImage = self.config.placeholderImg;
-    cell.url = _images[indexPath.row];
-    return cell;
+    if (indexPath.row < _images.count) {
+        ImageCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"cell" forIndexPath:indexPath];
+        cell.placeholderImage = self.config.placeholderImg;
+        cell.url = _images[indexPath.row];
+        return cell;
+    }
+    return [UICollectionViewCell new];
 }
 
 - (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath{
